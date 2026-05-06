@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>ЕГЭ‑марафон | Ранги Dota 2</title>
+    <style>
+        /* --- Базовые стили (без изменений) --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Inter', system-ui, 'Montserrat', sans-serif;
+        }
+
+        body {
+            background: radial-gradient(circle at 10% 20%, #0B0E1A, #02040C);
+            min-height: 100vh;
+            padding: 1.5rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .menu-screen, .subject-screen {
+            background: rgba(18, 22, 35, 0.85);
+            backdrop-filter: blur(12px);
+            border-radius: 2rem;
+            padding: 1.8rem;
+            border: 1px solid rgba(156, 108, 255, 0.3);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            animation: fadeSlideUp 0.5s ease-out;
+        }
+
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1, h2 {
+            background: linear-gradient(135deg, #c084fc, #a855f7);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+            animation: glowPulse 3s infinite;
+        }
+
+        @keyframes glowPulse {
+            0% { text-shadow: 0 0 0px rgba(192,132,252,0); }
+            50% { text-shadow: 0 0 8px rgba(192,132,252,0.6); }
+            100% { text-shadow: 0 0 0px rgba(192,132,252,0); }
+        }
+
+        .subjects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.3rem;
+        }
+
+        .subject-card {
+            background: #1e1b2e;
+            border-radius: 1.5rem;
+            padding: 1.2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            border: 1px solid #6b21a5;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+        .subject-card:hover {
+            transform: translateY(-5px);
+            border-color: #c084fc;
+            background: #2a2342;
+            box-shadow: 0 15px 30px rgba(156, 108, 255, 0.3);
+        }
+        .subject-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #d8b4fe;
+            margin-bottom: 0.5rem;
+        }
+        .subject-stats {
+            font-size: 0.8rem;
+            color: #9ca3af;
+        }
+
+        .back-btn {
+            background: #2d2a44;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 40px;
+            color: #e9d5ff;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 1.2rem;
+            transition: all 0.2s;
+        }
+        .back-btn:hover {
+            background: #4c3b7a;
+            transform: scale(1.02);
+        }
+
+        /* --- Панель статистики --- */
+        .stats-panel {
+            background: #17142b;
+            border-radius: 1.2rem;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            border-left: 5px solid #a855f7;
+            gap: 15px;
+        }
+        .level-box, .xp-box, .total-tasks-box {
+            font-weight: 600;
+            color: #ddd;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .level-value, .xp-value, .total-value {
+            font-weight: 800;
+            color: #e9a23b;
+            font-size: 1.6rem;
+        }
+        .rank-icon {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #2a2342;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 1rem;
+            color: #facc15;
+            border: 1px solid #6b21a5;
+        }
+        .rank-icon svg {
+            width: 24px;
+            height: 24px;
+            filter: drop-shadow(0 0 2px #c084fc);
+        }
+
+        /* --- Анимированный прогресс-бар --- */
+        .progress-area {
+            margin: 20px 0 10px;
+            position: relative;
+        }
+        .progress-bg {
+            background: #2d2a44;
+            border-radius: 30px;
+            height: 28px;
+            overflow: hidden;
+            position: relative;
+        }
+        .progress-fill {
+            background: linear-gradient(90deg, #c084fc, #a855f7);
+            width: 0%;
+            height: 100%;
+            border-radius: 30px;
+            transition: width 0.6s cubic-bezier(0.22, 0.97, 0.36, 1.02);
+            position: relative;
+            box-shadow: 0 0 10px #c084fc;
+        }
+        /* Эффект кипения */
+        .progress-fill::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 50%, rgba(255,255,200,0.25) 2%, transparent 2.5%);
+            background-size: 18px 18px;
+            background-repeat: repeat;
+            animation: bubbleBoil 0.8s linear infinite;
+            pointer-events: none;
+            border-radius: 30px;
+        }
+        /* Плывущая граница */
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            right: -2px;
+            top: -2px;
+            bottom: -2px;
+            width: 8px;
+            background: linear-gradient(180deg, #9f7aea, #6b21a5, #c084fc);
+            filter: blur(3px);
+            border-radius: 10px;
+            animation: waterWave 1.2s infinite alternate ease-in-out;
+            opacity: 0.8;
+        }
+        @keyframes bubbleBoil {
+            0% { background-position: 0 0; }
+            100% { background-position: 20px 20px; }
+        }
+        @keyframes waterWave {
+            0% { transform: translateX(0px) scaleY(1); opacity: 0.5; }
+            100% { transform: translateX(3px) scaleY(1.2); opacity: 1; }
+        }
+
+        /* --- Кнопки заданий и другие элементы (без изменений) --- */
+        .task-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+            gap: 12px;
+            margin: 1.5rem 0;
+        }
+        .task-btn {
+            background: #24213a;
+            border: none;
+            border-radius: 2rem;
+            padding: 12px 0;
+            font-weight: bold;
+            font-size: 1rem;
+            color: #e2e8f0;
+            cursor: pointer;
+            transition: 0.15s;
+            box-shadow: 0 2px 6px black;
+        }
+        .task-btn:hover {
+            background: #5b3d8c;
+            transform: scale(1.05);
+            box-shadow: 0 0 12px #c084fc;
+        }
+        .frequency-table {
+            background: #161329;
+            border-radius: 1.5rem;
+            margin-top: 2rem;
+            padding: 1rem;
+            border: 1px solid #4c1d95;
+        }
+        .freq-title {
+            color: #c084fc;
+            font-weight: bold;
+            margin-bottom: 0.8rem;
+            font-size: 1.2rem;
+            padding-left: 0.5rem;
+        }
+        .freq-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 4px;
+        }
+        .freq-card {
+            background: #1f1c38;
+            border-radius: 1rem;
+            text-align: center;
+            padding: 8px 4px;
+            border: 1px solid #4a2b7a;
+        }
+        .freq-num {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #c4b5fd;
+        }
+        .freq-count {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #b77cff;
+            background: #0f0c1c;
+            display: inline-block;
+            width: 100%;
+            border-radius: 30px;
+            margin-top: 4px;
+        }
+        .probnik-section {
+            margin: 1.8rem 0;
+        }
+        .probnik-title {
+            color: #c084fc;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+        .probnik-collapsed {
+            background: #1a1730;
+            border-radius: 1.2rem;
+            margin-bottom: 12px;
+            padding: 0.6rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            border-left: 5px solid #a855f7;
+            transition: 0.2s;
+        }
+        .probnik-collapsed:hover {
+            background: #2a2550;
+            transform: translateX(4px);
+        }
+        .probnik-expanded {
+            background: #131026;
+            border-radius: 1rem;
+            padding: 1rem;
+            margin-top: -8px;
+            margin-bottom: 15px;
+            border: 1px solid #3b2e5e;
+            animation: fadeSlide 0.3s;
+        }
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .probnik-score {
+            font-weight: bold;
+            color: #facc15;
+        }
+        .probnik-date {
+            color: #aaa;
+            font-size: 0.8rem;
+        }
+        .probnik-note textarea {
+            width: 100%;
+            background: #0f0c1e;
+            border: 1px solid #6b21a5;
+            border-radius: 1rem;
+            color: #e2e8f0;
+            padding: 8px;
+        }
+        .probnik-photo img {
+            max-width: 120px;
+            border-radius: 1rem;
+            margin-top: 8px;
+            cursor: pointer;
+            border: 1px solid #a78bfa;
+        }
+        .probnik-actions button {
+            background: #2c2846;
+            border: none;
+            border-radius: 2rem;
+            padding: 5px 12px;
+            margin-right: 8px;
+            color: white;
+            cursor: pointer;
+        }
+        .add-probnik-btn {
+            background: #4c1d95;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 2rem;
+            color: white;
+            font-weight: bold;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .add-probnik-btn:hover {
+            background: #6d28d9;
+            transform: scale(1.02);
+        }
+        .reset-all-btn {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            background: #3b2e5e80;
+            backdrop-filter: blur(4px);
+            border: 1px solid #6b21a5;
+            color: #c084fc;
+            font-size: 0.8rem;
+            padding: 6px 14px;
+            border-radius: 3rem;
+            cursor: pointer;
+            z-index: 100;
+        }
+        .reset-all-btn:hover {
+            background: #5b3d8c;
+            color: white;
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #4c1d95;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 2rem;
+            font-size: 0.9rem;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        .toast.show { opacity: 1; }
+        footer {
+            text-align: center;
+            color: #5a4a7c;
+            font-size: 0.7rem;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container" id="app">
+    <!-- Главное меню -->
+    <div id="menuScreen" class="menu-screen">
+        <h1>🎓 ЕГЭ‑марафон (ранги Dota 2)</h1>
+        <div style="text-align:center; margin-bottom:1rem; color:#c084fc;">
+            🏆 Общий счётчик заданий: <strong id="globalTotalCount">0</strong>
+        </div>
+        <div class="subjects-grid" id="subjectsGrid"></div>
+        <footer>⚡ +50 XP за задание. Ранг повышается с уровнем.</footer>
+    </div>
+
+    <!-- Страница предмета -->
+    <div id="subjectScreen" class="subject-screen" style="display: none;">
+        <button class="back-btn" id="backToMenu">← Назад к предметам</button>
+        <h2 id="subjectTitle"></h2>
+        <div class="stats-panel">
+            <div class="level-box">🎚️ Уровень: <span id="levelValue" class="level-value">1</span> <span id="rankIcon" class="rank-icon"></span></div>
+            <div class="xp-box">✨ XP: <span id="xpValue" class="xp-value">0</span></div>
+            <div class="total-tasks-box">📋 Выполнено: <span id="totalTasksDone" class="total-value">0</span></div>
+        </div>
+        <div class="progress-area">
+            <div class="progress-bg"><div class="progress-fill" id="xpBarFill"></div></div>
+            <div style="font-size:0.7rem; text-align:right; color:#aaa;" id="nextXpHint"></div>
+        </div>
+        <div id="taskContainer" class="task-grid"></div>
+        <div class="probnik-section">
+            <div class="probnik-title">📝 Пробники</div>
+            <div id="probnikList"></div>
+            <button class="add-probnik-btn" id="addProbnikBtn">➕ Добавить пробник</button>
+        </div>
+        <div class="frequency-table">
+            <div class="freq-title">📊 Количество выполненных заданий</div>
+            <div id="frequencyContainer" class="freq-items"></div>
+        </div>
+    </div>
+</div>
+<div id="toast" class="toast"></div>
+<button id="globalResetBtn" class="reset-all-btn">🗑️ Бросить все</button>
+
+<script>
+    // ---------- РАНГИ DOTA 2 (8 рангов × 5 звёзд = 40, но в игре 36 комбинаций) ----------
+    // Создаём массив для 30 видимых уровней: 1-30 уровень, каждый с уникальным 'рангом' и звёздами
+    const rankList = [
+        { level: 1, name: "Herald", iconId: "herald", stars: 1 },
+        { level: 2, name: "Herald", iconId: "herald", stars: 2 },
+        { level: 3, name: "Herald", iconId: "herald", stars: 3 },
+        { level: 4, name: "Herald", iconId: "herald", stars: 4 },
+        { level: 5, name: "Herald", iconId: "herald", stars: 5 },
+        { level: 6, name: "Guardian", iconId: "guardian", stars: 1 },
+        { level: 7, name: "Guardian", iconId: "guardian", stars: 2 },
+        { level: 8, name: "Guardian", iconId: "guardian", stars: 3 },
+        { level: 9, name: "Guardian", iconId: "guardian", stars: 4 },
+        { level: 10, name: "Guardian", iconId: "guardian", stars: 5 },
+        { level: 11, name: "Crusader", iconId: "crusader", stars: 1 },
+        { level: 12, name: "Crusader", iconId: "crusader", stars: 2 },
+        { level: 13, name: "Crusader", iconId: "crusader", stars: 3 },
+        { level: 14, name: "Crusader", iconId: "crusader", stars: 4 },
+        { level: 15, name: "Crusader", iconId: "crusader", stars: 5 },
+        { level: 16, name: "Archon", iconId: "archon", stars: 1 },
+        { level: 17, name: "Archon", iconId: "archon", stars: 2 },
+        { level: 18, name: "Archon", iconId: "archon", stars: 3 },
+        { level: 19, name: "Archon", iconId: "archon", stars: 4 },
+        { level: 20, name: "Archon", iconId: "archon", stars: 5 },
+        { level: 21, name: "Legend", iconId: "legend", stars: 1 },
+        { level: 22, name: "Legend", iconId: "legend", stars: 2 },
+        { level: 23, name: "Legend", iconId: "legend", stars: 3 },
+        { level: 24, name: "Legend", iconId: "legend", stars: 4 },
+        { level: 25, name: "Legend", iconId: "legend", stars: 5 },
+        { level: 26, name: "Ancient", iconId: "ancient", stars: 1 },
+        { level: 27, name: "Ancient", iconId: "ancient", stars: 2 },
+        { level: 28, name: "Ancient", iconId: "ancient", stars: 3 },
+        { level: 29, name: "Ancient", iconId: "ancient", stars: 4 },
+        { level: 30, name: "Ancient", iconId: "ancient", stars: 5 }
+    ];
+
+    // Функция рендеринга иконки ранга по ID (SVG, нарисованные вручную)
+    function getRankIconSVG(iconId, stars) {
+        const starSVG = (count) => {
+            let starsHtml = '';
+            for (let i = 0; i < count; i++) {
+                starsHtml += `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block; margin-left:2px;"><path d="M12 2L15 9H22L16 14L19 21L12 16.5L5 21L8 14L2 9H9L12 2Z" fill="#FBBF24" stroke="#FBBF24" stroke-width="1"/></svg>`;
+            }
+            return starsHtml;
+        };
+        
+        // Базовые иконки
+        const icons = {
+            herald: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 4L4 8L12 12L20 8L12 4Z" fill="#C084FC" stroke="#A855F7" stroke-width="1"/><path d="M4 12L12 16L20 12" stroke="#A855F7" stroke-width="1" fill="none"/><path d="M4 16L12 20L20 16" stroke="#A855F7" stroke-width="1" fill="none"/><circle cx="12" cy="8" r="2" fill="#2E1065"/></svg>`,
+            guardian: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L4 6L12 10L20 6L12 2Z" fill="#C084FC" stroke="#A855F7" stroke-width="1"/><path d="M4 10L12 14L20 10" stroke="#A855F7" stroke-width="1" fill="none"/><path d="M4 14L12 18L20 14" stroke="#A855F7" stroke-width="1" fill="none"/><rect x="9" y="5" width="6" height="4" rx="1" fill="#2E1065"/></svg>`,
+            crusader: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L4 7V17L12 22L20 17V7L12 2Z" fill="#C084FC" stroke="#A855F7" stroke-width="1"/><path d="M12 8V16M8 12H16" stroke="#2E1065" stroke-width="1.5"/></svg>`,
+            archon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L3 8V16L12 21L21 16V8L12 3Z" fill="#C084FC" stroke="#A855F7" stroke-width="1"/><path d="M12 8L8 11V15L12 18L16 15V11L12 8Z" fill="#2E1065" stroke="#A855F7" stroke-width="0.8"/><circle cx="12" cy="11" r="1.5" fill="#FBBF24"/></svg>`,
+            legend: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L3 8V16L12 22L21 16V8L12 2Z" fill="#C084FC" stroke="#A855F7" stroke-width="1"/><path d="M8 10L12 13L16 10" stroke="#2E1065" stroke-width="1.5" fill="none"/><path d="M12 13V19" stroke="#2E1065" stroke-width="1.5"/></svg>`,
+            ancient: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L4 9V18L12 22L20 18V9L12 2Z" fill="#C084FC" stroke="#A855F7" stroke-width="1"/><path d="M12 8L8 12L12 16L16 12L12 8Z" fill="#2E1065" stroke="#A855F7" stroke-width="0.8"/><circle cx="12" cy="12" r="2" fill="#FBBF24"/></svg>`
+        };
+        
+        const icon = icons[iconId] || icons.herald;
+        return `<div style="display: inline-flex; align-items: center; gap: 4px;">${icon}${starSVG(stars)}</div>`;
+    }
+
+    function getRankDisplay(level) {
+        if (level < 1) level = 1;
+        if (level > 30) level = 30;
+        const rankInfo = rankList.find(r => r.level === level);
+        if (!rankInfo) return { html: "Herald I", stars: 1 };
+        return {
+            html: getRankIconSVG(rankInfo.iconId, rankInfo.stars),
+            name: rankInfo.name,
+            stars: rankInfo.stars
+        };
+    }
+
+    // ---------- Игровая логика ----------
+    const SUBJECTS = [
+        { name: "Русский язык", tasks: 27 },
+        { name: "Проф. математика", tasks: 19 },
+        { name: "Информатика", tasks: 27 },
+        { name: "Физика", tasks: 30 }
+    ];
+    const XP_PER_TASK = 50;
+    const STORAGE_KEY = "ege_dota_full_ranks_v30";
+
+    function xpRequiredForNextLevel(currentLevel) {
+        return currentLevel * 100;
+    }
+
+    function computeLevelFromXP(xp) {
+        let level = 1;
+        let needed = xpRequiredForNextLevel(level);
+        while (xp >= needed) {
+            xp -= needed;
+            level++;
+            needed = xpRequiredForNextLevel(level);
+        }
+        if (level > 30) level = 30;
+        return level;
+    }
+
+    function xpInCurrentLevel(xp) {
+        let level = 1;
+        let remaining = xp;
+        let needed = xpRequiredForNextLevel(level);
+        while (remaining >= needed) {
+            remaining -= needed;
+            level++;
+            needed = xpRequiredForNextLevel(level);
+        }
+        return remaining;
+    }
+
+    function xpNeededForNext(xp) {
+        let level = 1;
+        let remaining = xp;
+        let needed = xpRequiredForNextLevel(level);
+        while (remaining >= needed) {
+            remaining -= needed;
+            level++;
+            needed = xpRequiredForNextLevel(level);
+        }
+        return needed - remaining;
+    }
+
+    let appState = {};
+
+    function initState() {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                for (let subj of SUBJECTS) {
+                    const data = parsed[subj.name] || { xp: 0, probniks: [], taskCounts: [] };
+                    let taskCounts = data.taskCounts || [];
+                    if (taskCounts.length !== subj.tasks) {
+                        let newCounts = new Array(subj.tasks).fill(0);
+                        for (let i = 0; i < Math.min(taskCounts.length, subj.tasks); i++) {
+                            newCounts[i] = taskCounts[i] || 0;
+                        }
+                        taskCounts = newCounts;
+                    }
+                    appState[subj.name] = {
+                        xp: data.xp || 0,
+                        probniks: data.probniks || [],
+                        taskCounts: taskCounts
+                    };
+                }
+            } catch(e) { console.warn(e); buildFreshState(); }
+        } else {
+            buildFreshState();
+        }
+        for (let subj of SUBJECTS) {
+            const state = appState[subj.name];
+            const totalCompletions = state.taskCounts.reduce((a,b)=>a+b,0);
+            const expectedXP = totalCompletions * XP_PER_TASK;
+            if (state.xp !== expectedXP) state.xp = expectedXP;
+        }
+        persistState();
+    }
+
+    function buildFreshState() {
+        for (let subj of SUBJECTS) {
+            appState[subj.name] = {
+                xp: 0,
+                probniks: [],
+                taskCounts: new Array(subj.tasks).fill(0)
+            };
+        }
+    }
+
+    function persistState() {
+        const toStore = {};
+        for (let subj of SUBJECTS) {
+            toStore[subj.name] = {
+                xp: appState[subj.name].xp,
+                probniks: appState[subj.name].probniks,
+                taskCounts: appState[subj.name].taskCounts
+            };
+        }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(toStore));
+        showToast("💾 Сохранено", false);
+    }
+
+    function showToast(msg, isError = false) {
+        const toast = document.getElementById('toast');
+        toast.innerText = msg;
+        toast.style.background = isError ? '#992525dd' : '#4c1d95';
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 1800);
+    }
+
+    function updateGlobalCounter() {
+        let total = 0;
+        for (let subj of SUBJECTS) {
+            total += appState[subj.name].taskCounts.reduce((a,b)=>a+b,0);
+        }
+        document.getElementById('globalTotalCount').innerText = total;
+    }
+
+    function addTaskCompletion(subjectName, taskIndex) {
+        const state = appState[subjectName];
+        if (taskIndex >= 0 && taskIndex < state.taskCounts.length) {
+            state.taskCounts[taskIndex]++;
+            const newTotal = state.taskCounts.reduce((a,b)=>a+b,0);
+            state.xp = newTotal * XP_PER_TASK;
+            persistState();
+            showToast(`✅ Задание ${taskIndex+1} выполнено! +${XP_PER_TASK} XP (всего ${state.taskCounts[taskIndex]} раз)`);
+            renderSubjectPage(subjectName);
+            updateGlobalCounter();
+        }
+    }
+
+    // Пробники
+    function addProbnik(subjectName, score) {
+        if (isNaN(score) || score < 0 || score > 100) {
+            showToast("Баллы от 0 до 100", true);
+            return false;
+        }
+        const newProbnik = {
+            id: Date.now(),
+            date: new Date().toLocaleString(),
+            score: score,
+            note: "",
+            screenshot: null,
+            expanded: false
+        };
+        appState[subjectName].probniks.unshift(newProbnik);
+        persistState();
+        renderSubjectPage(subjectName);
+        showToast("✅ Пробник добавлен");
+        return true;
+    }
+
+    function deleteProbnik(subjectName, id) {
+        if (confirm("Удалить пробник?")) {
+            appState[subjectName].probniks = appState[subjectName].probniks.filter(p => p.id !== id);
+            persistState();
+            renderSubjectPage(subjectName);
+        }
+    }
+
+    function updateProbnikNote(subjectName, id, newNote) {
+        const probnik = appState[subjectName].probniks.find(p => p.id === id);
+        if (probnik) { probnik.note = newNote; persistState(); renderSubjectPage(subjectName); }
+    }
+
+    function uploadProbnikPhoto(subjectName, id, file) {
+        if (!file.type.startsWith('image/')) { showToast("Только изображения", true); return; }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const probnik = appState[subjectName].probniks.find(p => p.id === id);
+            if (probnik) { probnik.screenshot = e.target.result; persistState(); renderSubjectPage(subjectName); showToast("🖼️ Фото сохранено"); }
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function toggleProbnik(subjectName, id) {
+        const probnik = appState[subjectName].probniks.find(p => p.id === id);
+        if (probnik) { probnik.expanded = !probnik.expanded; renderSubjectPage(subjectName); }
+    }
+
+    function resetAllSubjects() {
+        if (confirm("⚠️ ВНИМАНИЕ! Будут удалены ВСЕ задания, XP и пробники по всем предметам. Продолжить?")) {
+            if (confirm("Ещё раз подтвердите: безвозвратный сброс всего прогресса.")) {
+                buildFreshState();
+                persistState();
+                renderMainMenu();
+                if (document.getElementById('subjectScreen').style.display !== 'none') backToMenu();
+                updateGlobalCounter();
+                showToast("♻️ Весь прогресс сброшен");
+            }
+        }
+    }
+
+    function renderMainMenu() {
+        const grid = document.getElementById('subjectsGrid');
+        grid.innerHTML = '';
+        let globalTotal = 0;
+        for (let subj of SUBJECTS) {
+            const state = appState[subj.name];
+            const total = state.taskCounts.reduce((a,b)=>a+b,0);
+            globalTotal += total;
+            const level = computeLevelFromXP(state.xp);
+            const rank = getRankDisplay(level);
+            const probnikCount = state.probniks.length;
+            const card = document.createElement('div');
+            card.className = 'subject-card';
+            card.innerHTML = `
+                <div class="subject-title">${subj.name}</div>
+                <div class="subject-stats">🎚️ Уровень ${level}  ${rank.html}  | ✅ Заданий: ${total} | 📌 Пробников: ${probnikCount}</div>
+            `;
+            card.addEventListener('click', () => openSubject(subj.name));
+            grid.appendChild(card);
+        }
+        document.getElementById('globalTotalCount').innerText = globalTotal;
+    }
+
+    let currentSubject = null;
+    function openSubject(subjectName) {
+        document.getElementById('menuScreen').style.display = 'none';
+        document.getElementById('subjectScreen').style.display = 'block';
+        currentSubject = subjectName;
+        renderSubjectPage(subjectName);
+    }
+
+    function renderSubjectPage(subjectName) {
+        const config = SUBJECTS.find(s => s.name === subjectName);
+        if (!config) return;
+        const state = appState[subjectName];
+        const totalCompletions = state.taskCounts.reduce((a,b)=>a+b,0);
+        const level = computeLevelFromXP(state.xp);
+        const rank = getRankDisplay(level);
+        const currentXp = state.xp;
+        const xpNow = xpInCurrentLevel(currentXp);
+        const neededTotal = xpRequiredForNextLevel(level);
+        const percent = (xpNow / neededTotal) * 100;
+
+        document.getElementById('subjectTitle').innerText = subjectName;
+        document.getElementById('levelValue').innerText = level;
+        document.getElementById('rankIcon').innerHTML = rank.html;
+        document.getElementById('xpValue').innerText = currentXp;
+        document.getElementById('totalTasksDone').innerText = totalCompletions;
+        const fillBar = document.getElementById('xpBarFill');
+        fillBar.style.width = percent + '%';
+        document.getElementById('nextXpHint').innerHTML = `До следующего уровня: ${xpNeededForNext(currentXp)} XP`;
+
+        // Кнопки заданий
+        const taskContainer = document.getElementById('taskContainer');
+        taskContainer.innerHTML = '';
+        for (let i = 1; i <= config.tasks; i++) {
+            const btn = document.createElement('button');
+            btn.textContent = i;
+            btn.classList.add('task-btn');
+            btn.addEventListener('click', (function(idx) {
+                return () => {
+                    if (confirm(`Выполнить задание ${idx}? +${XP_PER_TASK} XP`)) {
+                        addTaskCompletion(subjectName, idx-1);
+                    }
+                };
+            })(i));
+            taskContainer.appendChild(btn);
+        }
+
+        // Пробники
+        const probnikDiv = document.getElementById('probnikList');
+        probnikDiv.innerHTML = '';
+        for (let prob of state.probniks) {
+            const collapsedDiv = document.createElement('div');
+            collapsedDiv.className = 'probnik-collapsed';
+            collapsedDiv.innerHTML = `
+                <div class="probnik-summary">
+                    <span class="probnik-date">📅 ${prob.date}</span>
+                    <span class="probnik-score">🎯 Баллы: ${prob.score}/100</span>
+                </div>
+                <span>${prob.expanded ? '▲' : '▼'}</span>
+            `;
+            collapsedDiv.addEventListener('click', () => toggleProbnik(subjectName, prob.id));
+            probnikDiv.appendChild(collapsedDiv);
+            if (prob.expanded) {
+                const expandedDiv = document.createElement('div');
+                expandedDiv.className = 'probnik-expanded';
+                expandedDiv.innerHTML = `
+                    <div class="probnik-note">
+                        <textarea placeholder="Заметка к пробнику..." rows="2">${escapeHtml(prob.note)}</textarea>
+                    </div>
+                    <div class="probnik-photo" id="photo-${prob.id}"></div>
+                    <div class="probnik-actions">
+                        <button class="upload-photo-btn" data-id="${prob.id}">📷 Загрузить фото</button>
+                        <button class="delete-probnik-btn" data-id="${prob.id}">🗑️ Удалить</button>
+                    </div>
+                `;
+                probnikDiv.appendChild(expandedDiv);
+                const photoDiv = expandedDiv.querySelector(`.probnik-photo`);
+                if (prob.screenshot) {
+                    const img = document.createElement('img');
+                    img.src = prob.screenshot;
+                    img.style.maxWidth = '120px';
+                    img.style.cursor = 'pointer';
+                    img.addEventListener('click', (e) => { e.stopPropagation(); openModalWithImage(prob.screenshot); });
+                    photoDiv.appendChild(img);
+                }
+                const textarea = expandedDiv.querySelector('textarea');
+                textarea.addEventListener('blur', (e) => updateProbnikNote(subjectName, prob.id, e.target.value));
+                const uploadBtn = expandedDiv.querySelector('.upload-photo-btn');
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = 'image/*';
+                fileInput.style.display = 'none';
+                uploadBtn.parentNode.appendChild(fileInput);
+                uploadBtn.addEventListener('click', () => fileInput.click());
+                fileInput.addEventListener('change', (e) => {
+                    if (e.target.files.length) uploadProbnikPhoto(subjectName, prob.id, e.target.files[0]);
+                });
+                const delBtn = expandedDiv.querySelector('.delete-probnik-btn');
+                delBtn.addEventListener('click', () => deleteProbnik(subjectName, prob.id));
+            }
+        }
+
+        // Таблица частот
+        const freqContainer = document.getElementById('frequencyContainer');
+        freqContainer.innerHTML = '';
+        for (let i = 0; i < state.taskCounts.length; i++) {
+            const count = state.taskCounts[i];
+            const card = document.createElement('div');
+            card.className = 'freq-card';
+            card.innerHTML = `<div class="freq-num">№${i+1}</div><div class="freq-count">${count}</div>`;
+            freqContainer.appendChild(card);
+        }
+
+        // Кнопка добавления пробника
+        const addBtn = document.getElementById('addProbnikBtn');
+        const newAdd = addBtn.cloneNode(true);
+        addBtn.parentNode.replaceChild(newAdd, addBtn);
+        newAdd.addEventListener('click', () => {
+            let score = prompt("Введите баллы пробника (0–100):", "0");
+            if (score !== null) {
+                const num = parseInt(score,10);
+                if (!isNaN(num) && num >= 0 && num <= 100) addProbnik(subjectName, num);
+                else showToast("Введите число от 0 до 100", true);
+            }
+        });
+        updateGlobalCounter();
+    }
+
+    function escapeHtml(str) {
+        if (!str) return "";
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    function openModalWithImage(src) {
+        const modal = document.createElement('div');
+        modal.style.position = 'fixed';
+        modal.style.top = '0'; modal.style.left = '0';
+        modal.style.width = '100%'; modal.style.height = '100%';
+        modal.style.backgroundColor = 'rgba(0,0,0,0.9)';
+        modal.style.zIndex = '2000';
+        modal.style.display = 'flex';
+        modal.style.justifyContent = 'center';
+        modal.style.alignItems = 'center';
+        modal.style.flexDirection = 'column';
+        const img = document.createElement('img');
+        img.src = src;
+        img.style.maxWidth = '90%';
+        img.style.maxHeight = '80%';
+        img.style.objectFit = 'contain';
+        const closeSpan = document.createElement('span');
+        closeSpan.innerText = '✕';
+        closeSpan.style.position = 'absolute';
+        closeSpan.style.top = '20px';
+        closeSpan.style.right = '30px';
+        closeSpan.style.color = 'white';
+        closeSpan.style.fontSize = '2rem';
+        closeSpan.style.cursor = 'pointer';
+        closeSpan.addEventListener('click', () => modal.remove());
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+        modal.append(closeSpan, img);
+        document.body.appendChild(modal);
+    }
+
+    function backToMenu() {
+        document.getElementById('menuScreen').style.display = 'block';
+        document.getElementById('subjectScreen').style.display = 'none';
+        renderMainMenu();
+    }
+
+    initState();
+    renderMainMenu();
+    updateGlobalCounter();
+
+    document.getElementById('backToMenu').addEventListener('click', backToMenu);
+    document.getElementById('globalResetBtn').addEventListener('click', resetAllSubjects);
+</script>
+</body>
+</html>
